@@ -211,6 +211,9 @@ If you can run `check`, `netconf`, and one `gnmic` query successfully, your lab 
 
 This section explains each `.py` file in a teaching style: what problem it solves, how it works internally, what inputs it needs, what it returns/prints, and what to modify when you extend the project.
 
+<details>
+<summary><strong>1) config.py - configuration and credential layer</strong></summary>
+
 ### 1) `config.py` - configuration and credential layer
 
 ### Primary purpose
@@ -266,6 +269,11 @@ In automation, configuration drift causes many bugs (one script uses one hostnam
 
 ---
 
+</details>
+
+<details>
+<summary><strong>2) simple_xr_automation.py - preflight and sanity-check script</strong></summary>
+
 ### 2) `simple_xr_automation.py` - preflight and sanity-check script
 
 ### Primary purpose
@@ -305,6 +313,11 @@ When beginners troubleshoot automation, they often mix credential errors with ne
 Run this first after editing `.env` or cloning on a new machine.
 
 ---
+
+</details>
+
+<details>
+<summary><strong>3) ios_xr_automation.py - main NETCONF workflow demonstration</strong></summary>
 
 ### 3) `ios_xr_automation.py` - main NETCONF workflow demonstration
 
@@ -367,6 +380,11 @@ Capabilities reveal which YANG modules and revisions the server exposes. That he
 
 ---
 
+</details>
+
+<details>
+<summary><strong>4) ios_xr_interface_automation.py - focused OpenConfig interface query</strong></summary>
+
 ### 4) `ios_xr_interface_automation.py` - focused OpenConfig interface query
 
 ### Primary purpose
@@ -415,6 +433,11 @@ In real environments, full configuration pulls are large and noisy. Filtered que
 
 ---
 
+</details>
+
+<details>
+<summary><strong>5) ios_xr_automation_env.py - compatibility and migration bridge</strong></summary>
+
 ### 5) `ios_xr_automation_env.py` - compatibility and migration bridge
 
 ### Primary purpose
@@ -447,6 +470,8 @@ A compatibility wrapper reduces migration friction.
 
 - Keep this file while users transition.
 - Deprecate later once all references are updated.
+
+</details>
 
 ---
 
