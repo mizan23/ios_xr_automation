@@ -4,6 +4,22 @@
 
 This project helps you quickly validate credentials, connect to IOS XR, pull running config, query interface data, and run `gnmic` commands with `.env` credentials.
 
+## Table of contents
+
+- [Why this repo exists](#why-this-repo-exists)
+- [Project map](#project-map)
+- [What runsh can do](#what-runsh-can-do)
+- [Environment variables](#environment-variables)
+- [Quick start](#quick-start)
+- [Script behavior details](#script-behavior-details)
+- [Troubleshooting](#troubleshooting)
+- [Security notes](#security-notes)
+- [Mental model (one-minute recap)](#mental-model-one-minute-recap)
+- [Deep dive: textbook-style explanation of every Python file](#deep-dive-textbook-style-explanation-of-every-python-file)
+- [How all Python files work together (system view)](#how-all-python-files-work-together-system-view)
+- [Suggested learning path (for CCNA/CCNP automation learners)](#suggested-learning-path-for-ccnaccnp-automation-learners)
+- [Glossary (quick definitions)](#glossary-quick-definitions)
+
 ## Why this repo exists
 
 If you are learning network automation (or just want fast results), this repo gives you small scripts that are easy to read and easy to run.
@@ -195,7 +211,7 @@ If you can run `check`, `netconf`, and one `gnmic` query successfully, your lab 
 
 This section explains each `.py` file in a teaching style: what problem it solves, how it works internally, what inputs it needs, what it returns/prints, and what to modify when you extend the project.
 
-## 1) `config.py` - configuration and credential layer
+### 1) `config.py` - configuration and credential layer
 
 ### Primary purpose
 
@@ -250,7 +266,7 @@ In automation, configuration drift causes many bugs (one script uses one hostnam
 
 ---
 
-## 2) `simple_xr_automation.py` - preflight and sanity-check script
+### 2) `simple_xr_automation.py` - preflight and sanity-check script
 
 ### Primary purpose
 
@@ -290,7 +306,7 @@ Run this first after editing `.env` or cloning on a new machine.
 
 ---
 
-## 3) `ios_xr_automation.py` - main NETCONF workflow demonstration
+### 3) `ios_xr_automation.py` - main NETCONF workflow demonstration
 
 ### Primary purpose
 
@@ -351,7 +367,7 @@ Capabilities reveal which YANG modules and revisions the server exposes. That he
 
 ---
 
-## 4) `ios_xr_interface_automation.py` - focused OpenConfig interface query
+### 4) `ios_xr_interface_automation.py` - focused OpenConfig interface query
 
 ### Primary purpose
 
@@ -399,7 +415,7 @@ In real environments, full configuration pulls are large and noisy. Filtered que
 
 ---
 
-## 5) `ios_xr_automation_env.py` - compatibility and migration bridge
+### 5) `ios_xr_automation_env.py` - compatibility and migration bridge
 
 ### Primary purpose
 
