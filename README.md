@@ -188,3 +188,283 @@ Check:
 - `run.sh` = single front door for all of the above
 
 If you can run `check`, `netconf`, and one `gnmic` query successfully, your lab automation foundation is in good shape.
+
+---
+
+## Deep dive: textbook-style explanation of every Python file
+
+This section explains each `.py` file in a teaching style: what problem it solves, how it works internally, what inputs it needs, what it returns/prints, and what to modify when you extend the project.
+
+## 1) `config.py` - configuration and credential layer
+
+### Primary purpose
+
+`config.py` is the configuration foundation of the project. Instead of scattering credentials and connection parameters across scripts, all runtime settings are loaded and validated in one place.
+
+### Why this design matters
+
+In automation, configuration drift causes many bugs (one script uses one hostname, another script uses another port). Centralizing config in one module gives:
+
+- consistency across scripts,
+- easier troubleshooting,
+- safer credential handling,
+- less duplicated code.
+
+### Step-by-step internal flow
+
+1. Determine script location using `Path(__file__).resolve().parent`.
+2. Build two possible `.env` paths:
+   - current directory `.env`
+   - parent directory `.env`
+3. Load the first `.env` file that exists.
+4. Read env vars:
+   - required: `XR_USERNAME`, `XR_PASSWORD`
+   - optional: `XR_HOSTNAME`, `XR_NETCONF_PORT`, `XR_GNMI_PORT`
+5. Apply defaults for optional values if missing.
+6. Validate required values and raise a clear `ValueError` if missing.
+7. Return a normalized Python dictionary used by all other scripts.
+
+### Inputs
+
+- Environment variables from `.env` and shell.
+
+### Output
+
+- Python dict with canonical keys:
+  - `hostname`
+  - `username`
+  - `password`
+  - `netconf_port`
+  - `gnmi_port`
+
+### Typical failure modes
+
+- Missing `.env` keys -> `ValueError`
+- Non-numeric port values -> `int(...)` conversion error
+
+### Extension ideas
+
+- Add `XR_TIMEOUT` with default timeout values.
+- Add optional strict mode to reject default hostname usage.
+- Add schema validation (`pydantic`) for stronger type checks.
+
+---
+
+## 2) `simple_xr_automation.py` - preflight and sanity-check script
+
+### Primary purpose
+
+This script is a lightweight preflight check. It verifies that configuration can be loaded before any network connection attempt.
+
+### Why it exists
+
+When beginners troubleshoot automation, they often mix credential errors with network errors. This script isolates config validation first, so you can quickly answer: "Are my credentials and variables loaded correctly?"
+
+### Step-by-step internal flow
+
+1. Print a clear header.
+2. Call `load_xr_config()` from `config.py`.
+3. If successful:
+   - print hostname, NETCONF port, gNMI port, username,
+   - print masked password marker.
+4. If failure occurs:
+   - catch exception,
+   - print human-readable error.
+
+### Inputs
+
+- `.env` values through `config.py`.
+
+### Output
+
+- Console text only (no files written).
+
+### What it does not do
+
+- It does not open NETCONF/gNMI sessions.
+- It does not validate live network reachability.
+
+### Best use case
+
+Run this first after editing `.env` or cloning on a new machine.
+
+---
+
+## 3) `ios_xr_automation.py` - main NETCONF workflow demonstration
+
+### Primary purpose
+
+This is the core operational script. It demonstrates a complete NETCONF session lifecycle against IOS XR and gives practical gNMI command examples.
+
+### Conceptual architecture
+
+The script has two major functions:
+
+- `netconf_example()` -> performs NETCONF operations.
+- `print_gnmi_examples()` -> prints `gnmic` commands matching loaded config.
+
+The `__main__` block orchestrates both.
+
+### NETCONF flow in detail (`netconf_example()`)
+
+1. Load settings via `load_xr_config()`.
+2. Resolve DNS hostname to IPv4 via `socket.gethostbyname(...)`.
+3. Build NETCONF connection with `ncclient.manager.connect(...)`:
+   - host = resolved IP
+   - port = `netconf_port`
+   - username/password from config
+   - `hostkey_verify=False`
+   - `device_params={"name": "iosxr"}`
+4. Request running configuration:
+   - `session.get_config(source="running")`
+5. Print payload length (quick signal of successful retrieval).
+6. Iterate server capabilities and print selected model URIs.
+
+### Why capability printing is useful
+
+Capabilities reveal which YANG modules and revisions the server exposes. That helps you:
+
+- pick valid models for future automation,
+- confirm platform feature support,
+- compare behavior across IOS XR versions.
+
+### gNMI helper flow (`print_gnmi_examples()`)
+
+1. Reload same config values.
+2. Print command templates using current host/port/user.
+3. Keep password masked in output to avoid accidental exposure in terminal logs.
+
+### Inputs
+
+- `.env` configuration
+- reachable IOS XR endpoint
+
+### Output
+
+- Console output with NETCONF status, payload size, capabilities, and `gnmic` examples.
+
+### What to extend next
+
+- Save NETCONF XML output to a timestamped file.
+- Add XML parsing for specific fields (hostname, interface count).
+- Add command-line flags for host override and capability count.
+
+---
+
+## 4) `ios_xr_interface_automation.py` - focused OpenConfig interface query
+
+### Primary purpose
+
+This script narrows scope from "entire running config" to "single interface data" using an XML filter. It is designed for targeted, faster, and more relevant queries.
+
+### Why filtered queries are important
+
+In real environments, full configuration pulls are large and noisy. Filtered queries:
+
+- reduce payload size,
+- speed up troubleshooting,
+- support feature-specific automation pipelines.
+
+### Step-by-step internal flow
+
+1. Function `get_interface_info(interface_name="Loopback0")` is called.
+2. Load config and resolve hostname.
+3. Open NETCONF session via `manager.connect(...)`.
+4. Construct XML filter string using OpenConfig namespace:
+   - `http://openconfig.net/yang/interfaces`
+5. Inject requested interface name into filter.
+6. Execute `session.get(filter_xml)`.
+7. Return raw NETCONF response as string.
+8. In script mode (`__main__`), call with `Loopback0`, print completion + response size.
+
+### Inputs
+
+- interface name (function parameter)
+- `.env` connection values
+
+### Output
+
+- raw XML response string
+- console status in direct script execution
+
+### Design notes
+
+- Current implementation uses direct string formatting in XML. This is fine for lab usage, but for production hardening you may sanitize/validate interface names.
+
+### Extension ideas
+
+- Add CLI argument parsing (`argparse`) for interface name.
+- Parse response into structured JSON-like dict.
+- Add fallback behavior when interface is absent.
+
+---
+
+## 5) `ios_xr_automation_env.py` - compatibility and migration bridge
+
+### Primary purpose
+
+This file provides a stable, backward-compatible entrypoint for users/scripts that still call the older filename.
+
+### Why it exists
+
+Renaming files in active projects can break:
+
+- shell aliases,
+- automation pipelines,
+- documentation snippets,
+- student notes/lab guides.
+
+A compatibility wrapper reduces migration friction.
+
+### Step-by-step internal flow
+
+1. Import `netconf_example` and `print_gnmi_examples` from `ios_xr_automation.py`.
+2. Define `main()` to print a mode-specific header.
+3. Call imported functions in same order.
+4. Catch and print exceptions identically.
+
+### Inputs/outputs
+
+- Same as `ios_xr_automation.py`.
+
+### Practical guidance
+
+- Keep this file while users transition.
+- Deprecate later once all references are updated.
+
+---
+
+## How all Python files work together (system view)
+
+Think in layers:
+
+1. **Configuration layer**: `config.py`
+2. **Validation/preflight layer**: `simple_xr_automation.py`
+3. **Operational NETCONF layer**: `ios_xr_automation.py`
+4. **Targeted query layer**: `ios_xr_interface_automation.py`
+5. **Compatibility layer**: `ios_xr_automation_env.py`
+
+Data path:
+
+- `.env` -> `config.py` -> shared dict -> network scripts -> console output
+
+---
+
+## Suggested learning path (for CCNA/CCNP automation learners)
+
+1. Read `config.py` first to understand environment loading and validation.
+2. Run and inspect `simple_xr_automation.py` output.
+3. Read `ios_xr_automation.py` and map each print line to an action.
+4. Study the interface filter in `ios_xr_interface_automation.py`.
+5. Modify one variable at a time (hostname, interface name, encoding) and observe behavior.
+
+---
+
+## Glossary (quick definitions)
+
+- **NETCONF**: Network management protocol using XML over SSH.
+- **gNMI**: gRPC Network Management Interface for telemetry/config operations.
+- **YANG model**: Data model describing network configuration/state structure.
+- **Capability URI**: Server-advertised model/version support string.
+- **OpenConfig**: Vendor-neutral YANG model set.
+- **Preflight check**: Early validation step before expensive operations.
