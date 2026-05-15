@@ -1,511 +1,269 @@
-# IOS XR Automation Toolkit
+# IOS XR Automation — NETCONF & gNMI Learning Repository
 
-> Beginner-friendly Python + shell toolkit for Cisco IOS XR labs using **NETCONF** and **gNMI**.
+> **30 Python scripts. 24 progressive levels. Beginner to Master.**  
+> Hands-on network automation on Cisco IOS XR sandbox using NETCONF, gNMI, and RESTCONF.
 
-This project helps you quickly validate credentials, connect to IOS XR, pull running config, query interface data, and run `gnmic` commands with `.env` credentials.
-
-## Table of contents
-
-- [Why this repo exists](#why-this-repo-exists)
-- [Project map](#project-map)
-- [What runsh can do](#what-runsh-can-do)
-- [Environment variables](#environment-variables)
-- [Quick start](#quick-start)
-- [Script behavior details](#script-behavior-details)
-- [Troubleshooting](#troubleshooting)
-- [Security notes](#security-notes)
-- [Mental model (one-minute recap)](#mental-model-one-minute-recap)
-- [Deep dive: textbook-style explanation of every Python file](#deep-dive-textbook-style-explanation-of-every-python-file)
-- [How all Python files work together (system view)](#how-all-python-files-work-together-system-view)
-- [Suggested learning path (for CCNA/CCNP automation learners)](#suggested-learning-path-for-ccnaccnp-automation-learners)
-- [Glossary (quick definitions)](#glossary-quick-definitions)
-
-## Why this repo exists
-
-If you are learning network automation (or just want fast results), this repo gives you small scripts that are easy to read and easy to run.
-
-- No hardcoded credentials
-- No heavy framework
-- Clear one-command workflow from `run.sh`
+[![Python](https://img.shields.io/badge/python-3.9%2B-blue)](https://www.python.org/)
+[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![Platform](https://img.shields.io/badge/platform-IOS%20XR-orange)](https://www.cisco.com/c/en/us/products/ios-nx-os-software/ios-xr-software/index.html)
 
 ---
 
-## Project map
+## What This Repo Does
 
-| File | Purpose | When to use |
-|---|---|---|
-| `config.py` | Loads `.env`, applies defaults, validates required keys | Every script depends on this |
-| `simple_xr_automation.py` | Credential sanity check | First run after editing `.env` |
-| `ios_xr_automation.py` | Full NETCONF demo (`running` config + capabilities) | Verify end-to-end NETCONF access |
-| `ios_xr_interface_automation.py` | NETCONF query for one interface (`Loopback0` default) | Pull targeted interface data |
-| `ios_xr_automation_env.py` | Backward-compatible wrapper around `ios_xr_automation.py` | Keep old command compatibility |
-| `run.sh` | Friendly command runner for all actions, including `gnmic` passthrough | Daily usage entrypoint |
-| `requirements.txt` | Python dependencies | Install environment |
+This repository is a complete, hands-on learning path for network automation on Cisco IOS XR. Starting from basic connectivity and progressing through telemetry pipelines, BGP monitoring, service orchestration, compliance auditing, and production-ready logging — every concept is a runnable Python script against a real device.
+
+**No slides. No theory-only chapters. Every script connects to a live IOS XR sandbox.**
 
 ---
 
-## What `run.sh` can do
+## Quick Start
 
 ```bash
-./run.sh cisco ?
-./run.sh cisco check
-./run.sh cisco netconf
-./run.sh cisco interface
-./run.sh cisco gnmic
-./run.sh cisco gnmic get --path openconfig-interfaces:interfaces
-./run.sh cisco gnmic --encoding ascii get --path "show version"
-./run.sh cisco all
+# 1. Clone and set up
+git clone <this-repo>
+cd ios_xr_automation
+python -m pip install -r requirements.txt
+
+# 2. Create your .env file (gitignored)
+echo XR_USERNAME=your_username > .env
+echo XR_PASSWORD=your_password >> .env
+
+# 3. Verify
+python simple_xr_automation.py
+
+# 4. Start learning
+python level01_netconf_connect.py
 ```
-
-### Notes
-
-- `gnmic` arguments are passed through exactly after `gnmic`
-- If no encoding is provided, wrapper adds `--encoding JSON_IETF`
-- `./run.sh cisco gnmic ?` and `./run.sh cisco gnmic help` map to `gnmic --help`
 
 ---
 
-## Environment variables
+## Project Structure
 
-Create `.env` in the repo root:
+```
+ios_xr_automation/
+├── config.py                          # Credential loader + validation
+├── simple_xr_automation.py            # Quick credential check
+├── ios_xr_automation.py               # NETCONF demo (full config)
+├── ios_xr_interface_automation.py     # NETCONF single-interface query
+├── ios_xr_gnmi_automation.py          # gNMI get on interfaces + network-instances
+├── ios_xr_automation_env.py           # Backward-compatible wrapper
+│
+├── level01_netconf_connect.py         # Connection, 845 capabilities, IETF standards
+├── level02_netconf_get_config.py      # get_config(), XML parsing, operational data
+├── level03_netconf_filter_xml.py      # Subtree filters, containment, specific leafs
+├── level04_netconf_xpath_filter.py    # XPath predicates, starts-with, position
+├── level05_netconf_edit_config.py     # MERGE/REPLACE/DELETE, candidate commit
+├── level06_gnmi_get.py                # gNMI capabilities, Get, protobuf→dict
+├── level07_gnmi_subscribe.py          # ONCE/SAMPLE/ON_CHANGE subscriptions
+├── level08_netconf_interface_lifecycle.py  # Full CRUD lifecycle
+├── level09_reconciliation.py          # Config vs state reconciliation
+├── level10_error_handling.py          # Retry logic, exponential backoff, exceptions
+├── level11_telemetry_pipeline.py      # Collect→Transform→Analyze→Export
+├── level12_multi_device.py            # ThreadPoolExecutor, inventory, templates
+├── level13_bgp_monitoring.py          # BGP neighbor analysis, health scoring
+├── level14_master_suite.py            # Full CLI tool (health/interfaces/bgp/full)
+├── level15_netconf_notifications.py   # Event streaming, create_subscription
+├── level16_restconf.py                # HTTP/JSON alternative, requests library
+├── level17_yang_schema.py             # get-schema, model analysis, validation
+├── level18_config_backup.py           # Backup, diff, restore, git versioning
+├── level19_gnmi_set.py                # Set operations (update/replace/delete)
+├── level20_service_orchestration.py   # Multi-step workflows, rollback, state machine
+├── level21_benchmarking.py            # Latency, throughput, protocol comparison
+├── level22_compliance.py              # Policy-as-code, security audit, scoring
+├── level23_logging_monitoring.py      # Structured JSON logs, Prometheus metrics, audit
+├── level24_test_framework.py          # pytest fixtures, unit/integration tests
+│
+├── LEARNING_PATH.md                   # Detailed learning guide
+├── requirements.txt                   # Python dependencies
+├── run.sh                             # Bash runner (Linux/macOS/WSL)
+└── .gitignore
+```
+
+---
+
+## Learning Path
+
+### Beginner (Levels 1–6) — Foundations
+
+| # | Script | Protocol | Concept |
+|---|--------|----------|---------|
+| 1 | `level01_netconf_connect.py` | NETCONF | Connection, 845 capabilities, IETF features |
+| 2 | `level02_netconf_get_config.py` | NETCONF | Pull config, lxml parsing, data stores |
+| 3 | `level03_netconf_filter_xml.py` | NETCONF | Subtree filters, containment, leaf selection |
+| 4 | `level04_netconf_xpath_filter.py` | NETCONF | XPath predicates, position, starts-with |
+| 5 | `level05_netconf_edit_config.py` | NETCONF | MERGE/REPLACE/DELETE, candidate datastore |
+| 6 | `level06_gnmi_get.py` | gNMI | Capabilities, get operations, data parsing |
+
+### Intermediate (Levels 7–8) — Operations
+
+| # | Script | Protocol | Concept |
+|---|--------|----------|---------|
+| 7 | `level07_gnmi_subscribe.py` | gNMI | ONCE, SAMPLE, ON_CHANGE streaming |
+| 8 | `level08_netconf_interface_lifecycle.py` | NETCONF | Create → Verify → Update → Delete |
+
+### Advanced (Levels 9–12) — Production Patterns
+
+| # | Script | Protocol | Concept |
+|---|--------|----------|---------|
+| 9 | `level09_reconciliation.py` | Both | Config vs operational state drift |
+| 10 | `level10_error_handling.py` | Both | Retry with exponential backoff |
+| 11 | `level11_telemetry_pipeline.py` | gNMI | Collect → Transform → Analyze → Export |
+| 12 | `level12_multi_device.py` | Both | Parallel ops, inventory, templates |
+
+### Expert (Levels 13–19) — Protocols & Operations
+
+| # | Script | Protocol | Concept |
+|---|--------|----------|---------|
+| 13 | `level13_bgp_monitoring.py` | Both | BGP neighbor state, health scoring |
+| 14 | `level14_master_suite.py` | Both | CLI tool with JSON/CSV export |
+| 15 | `level15_netconf_notifications.py` | NETCONF | Event streaming, subscriptions |
+| 16 | `level16_restconf.py` | RESTCONF | HTTP/JSON, requests library |
+| 17 | `level17_yang_schema.py` | NETCONF | Schema retrieval, model analysis |
+| 18 | `level18_config_backup.py` | NETCONF | Backup, diff, restore patterns |
+| 19 | `level19_gnmi_set.py` | gNMI | Configuration via gNMI Set |
+
+### Master (Levels 20–24) — Production Readiness
+
+| # | Script | Protocol | Concept |
+|---|--------|----------|---------|
+| 20 | `level20_service_orchestration.py` | Both | Multi-step workflows with rollback |
+| 21 | `level21_benchmarking.py` | Both | NETCONF vs gNMI performance |
+| 22 | `level22_compliance.py` | Both | Policy-as-code, security audit |
+| 23 | `level23_logging_monitoring.py` | Both | JSON logs, Prometheus metrics, audit trail |
+| 24 | `level24_test_framework.py` | Both | pytest with NETCONF/gNMI fixtures |
+
+---
+
+## Key Concepts Covered
+
+### NETCONF
+- SSH transport (port 830), XML encoding
+- `<get-config>` vs `<get>`, `running`/`candidate`/`startup` datastores
+- Subtree filters (XML containment) and XPath filters (predicates)
+- `edit_config` with MERGE, REPLACE, DELETE operations
+- Candidate datastore → `validate` → `commit` / `discard_changes`
+- Confirmed commit for automatic rollback safety
+- Capability discovery (IETF standard + vendor extensions)
+
+### gNMI
+- gRPC/HTTP2 transport (port 57777), Protobuf encoding
+- `get()` for point-in-time state, `subscribe()` for streaming telemetry
+- Subscription modes: ONCE, SAMPLE (periodic), ON_CHANGE (event-driven)
+- `set()` for configuration: update, replace, delete
+- JSON_IETF and ASCII encoding
+- OpenConfig vendor-neutral paths
+
+### Protocol Selection Guide
+
+| Use Case | Protocol | Why |
+|----------|----------|-----|
+| Full configuration management | NETCONF | Candidate datastore, transactions, rollback |
+| Real-time telemetry | gNMI | Streaming native, efficient binary transport |
+| Quick state queries | gNMI | JSON output, faster than XML parsing |
+| DevOps/CI integration | RESTCONF | HTTP, JSON, familiar tooling |
+| Multi-vendor portability | gNMI | OpenConfig paths work across platforms |
+
+---
+
+## Running Tests
+
+```bash
+pip install pytest
+pytest level24_test_framework.py -v         # All tests
+pytest level24_test_framework.py -v -k Netconf  # NETCONF only
+pytest level24_test_framework.py -v -k Gnmi     # gNMI only
+```
+
+Tests cover: configuration loading, NETCONF connectivity, gNMI get operations, interface naming validation, and cross-protocol consistency.
+
+---
+
+## Dependencies
+
+```
+ncclient>=0.6.0       # NETCONF client
+python-dotenv>=1.0.0  # .env file loading
+pygnmi>=0.8.15        # gNMI client (pip install pygnmi)
+pytest>=7.0           # Test framework (optional)
+requests>=2.28        # RESTCONF client (optional)
+lxml>=3.3             # XML parsing (installed with ncclient)
+```
+
+Install all at once:
+```bash
+pip install -r requirements.txt
+pip install pygnmi pytest requests
+```
+
+---
+
+## Environment Setup
+
+Create `.env` in the project root:
 
 ```env
 XR_USERNAME=your_username
 XR_PASSWORD=your_password
-```
 
-Optional values (defaults shown):
-
-```env
+# Optional (defaults shown):
 XR_HOSTNAME=sandbox-iosxr-1.cisco.com
 XR_NETCONF_PORT=830
 XR_GNMI_PORT=57777
 ```
 
----
-
-## Quick start
-
-### 1) Python environment
-
-```bash
-python3 -m venv xr_venv
-source xr_venv/bin/activate
-pip install -r requirements.txt
-```
-
-### 2) Install `gnmic` (optional but recommended)
-
-```bash
-bash -c "$(curl -sL https://get-gnmic.openconfig.net)"
-gnmic version
-```
-
-If `gnmic` is not found:
-
-```bash
-export PATH="$PATH:$HOME/.local/bin"
-```
-
-### 3) Run in this order
-
-1. `./run.sh cisco check`
-2. `./run.sh cisco netconf`
-3. `./run.sh cisco interface`
-4. `./run.sh cisco gnmic get --path openconfig-interfaces:interfaces`
+`.env` is gitignored — never commit credentials.
 
 ---
 
-## Script behavior details
+## Known Sandbox Behaviors
 
-### `config.py`
-
-- Searches `.env` in current folder, then parent folder
-- Loads variables via `python-dotenv`
-- Requires `XR_USERNAME` and `XR_PASSWORD`
-- Returns normalized config dict:
-  - `hostname`, `username`, `password`, `netconf_port`, `gnmi_port`
-
-### `simple_xr_automation.py`
-
-- Calls `load_xr_config()`
-- Prints resolved settings (password masked)
-- Stops with a clear error if required keys are missing
-
-### `ios_xr_automation.py`
-
-- Resolves hostname to IP
-- Opens NETCONF session via `ncclient.manager.connect(...)`
-- Retrieves running config with `get_config(source="running")`
-- Prints response size and sample YANG capabilities
-- Prints suggested `gnmic` commands
-
-### `ios_xr_interface_automation.py`
-
-- Opens NETCONF session
-- Sends XML filter for one interface (`Loopback0` by default)
-- Returns raw XML response as string
-
-### `ios_xr_automation_env.py`
-
-- Compatibility entrypoint for old script names
-- Reuses `netconf_example()` and `print_gnmi_examples()` from `ios_xr_automation.py`
+- **Interface names** are in `<interface-name>`, not `<active>` text. `<active>act</active>` means "active"; `<active>pre</active>` means "preconfigured".
+- **gNMI target** requires IP address (not hostname) and port as string: `(ip, str(port))`
+- **gNMI paths** work without OC prefix: `"interfaces"` not `"openconfig-interfaces:interfaces"`
+- **Sandbox connection limits** — avoid rapid reconnects. Wait 30s between scripts if you hit SSH resets.
+- **RESTCONF** may not be exposed on some Cisco sandboxes — NETCONF and gNMI are the reliable options.
 
 ---
 
 ## Troubleshooting
 
-### `Missing required .env keys`
-
-Add both keys to `.env`:
-
-- `XR_USERNAME`
-- `XR_PASSWORD`
-
-### `gnmic is not installed or not in PATH`
-
-- Install `gnmic`
-- Verify with `gnmic version`
-- Export path if needed: `export PATH="$PATH:$HOME/.local/bin"`
-
-### `unsupported get-request encoding: JSON`
-
-Your target does not accept plain JSON for that request.
-
-- Use `--encoding JSON_IETF`
-- `run.sh` already defaults to `JSON_IETF` if you do not provide one
-
-### Connection timeout / auth failure
-
-Check:
-
-- DNS resolves hostname correctly
-- VPN/network path to lab is up
-- NETCONF/gNMI ports are reachable
-- Username/password are correct
+| Problem | Solution |
+|---------|----------|
+| `ModuleNotFoundError: dotenv` | `python -m pip install -r requirements.txt` |
+| SSH connection reset | Sandbox rate limit — wait 30 seconds |
+| gNMI timeout | Use IP + str(port), check `--insecure` |
+| Missing `.env` keys | Create `.env` with `XR_USERNAME` and `XR_PASSWORD` |
+| XPath filter returns empty | Try subtree filter instead; verify namespace prefixes |
 
 ---
 
-## Security notes
+## Security
 
-- `.env` is ignored by git (`.gitignore`)
-- Do not paste real passwords into screenshots or issue trackers
-- Prefer lab or sandbox credentials over production creds
-
----
-
-## Mental model (one-minute recap)
-
-- `config.py` = settings + validation
-- `check` = preflight
-- `netconf` = full config pull
-- `interface` = focused data pull
-- `gnmic` = telemetry/CLI-style queries
-- `run.sh` = single front door for all of the above
-
-If you can run `check`, `netconf`, and one `gnmic` query successfully, your lab automation foundation is in good shape.
+- `.env` is gitignored — credentials never leave your machine
+- `hostkey_verify=False` is for lab/sandbox only (never in production)
+- Audit trail logging available via `level23_logging_monitoring.py`
+- Compliance checking built in via `level22_compliance.py`
 
 ---
 
-## Deep dive: textbook-style explanation of every Python file
+## Next Steps After This Repo
 
-This section explains each `.py` file in a teaching style: what problem it solves, how it works internally, what inputs it needs, what it returns/prints, and what to modify when you extend the project.
-
-<details>
-<summary><strong>1) config.py - configuration and credential layer</strong></summary>
-
-### 1) `config.py` - configuration and credential layer
-
-### Primary purpose
-
-`config.py` is the configuration foundation of the project. Instead of scattering credentials and connection parameters across scripts, all runtime settings are loaded and validated in one place.
-
-### Why this design matters
-
-In automation, configuration drift causes many bugs (one script uses one hostname, another script uses another port). Centralizing config in one module gives:
-
-- consistency across scripts,
-- easier troubleshooting,
-- safer credential handling,
-- less duplicated code.
-
-### Step-by-step internal flow
-
-1. Determine script location using `Path(__file__).resolve().parent`.
-2. Build two possible `.env` paths:
-   - current directory `.env`
-   - parent directory `.env`
-3. Load the first `.env` file that exists.
-4. Read env vars:
-   - required: `XR_USERNAME`, `XR_PASSWORD`
-   - optional: `XR_HOSTNAME`, `XR_NETCONF_PORT`, `XR_GNMI_PORT`
-5. Apply defaults for optional values if missing.
-6. Validate required values and raise a clear `ValueError` if missing.
-7. Return a normalized Python dictionary used by all other scripts.
-
-### Inputs
-
-- Environment variables from `.env` and shell.
-
-### Output
-
-- Python dict with canonical keys:
-  - `hostname`
-  - `username`
-  - `password`
-  - `netconf_port`
-  - `gnmi_port`
-
-### Typical failure modes
-
-- Missing `.env` keys -> `ValueError`
-- Non-numeric port values -> `int(...)` conversion error
-
-### Extension ideas
-
-- Add `XR_TIMEOUT` with default timeout values.
-- Add optional strict mode to reject default hostname usage.
-- Add schema validation (`pydantic`) for stronger type checks.
+1. **Multi-vendor**: Adapt for Arista EOS, Juniper Junos, Nokia SR OS
+2. **CI/CD**: GitHub Actions running compliance checks on schedule
+3. **Ansible**: Wrap scripts as Ansible modules
+4. **Dashboard**: Grafana over Prometheus metrics from level 23
+5. **Database**: Store telemetry in InfluxDB/TimescaleDB
+6. **Intent-based**: Declare desired state, let orchestrator converge
 
 ---
 
-</details>
+## License
 
-<details>
-<summary><strong>2) simple_xr_automation.py - preflight and sanity-check script</strong></summary>
-
-### 2) `simple_xr_automation.py` - preflight and sanity-check script
-
-### Primary purpose
-
-This script is a lightweight preflight check. It verifies that configuration can be loaded before any network connection attempt.
-
-### Why it exists
-
-When beginners troubleshoot automation, they often mix credential errors with network errors. This script isolates config validation first, so you can quickly answer: "Are my credentials and variables loaded correctly?"
-
-### Step-by-step internal flow
-
-1. Print a clear header.
-2. Call `load_xr_config()` from `config.py`.
-3. If successful:
-   - print hostname, NETCONF port, gNMI port, username,
-   - print masked password marker.
-4. If failure occurs:
-   - catch exception,
-   - print human-readable error.
-
-### Inputs
-
-- `.env` values through `config.py`.
-
-### Output
-
-- Console text only (no files written).
-
-### What it does not do
-
-- It does not open NETCONF/gNMI sessions.
-- It does not validate live network reachability.
-
-### Best use case
-
-Run this first after editing `.env` or cloning on a new machine.
+MIT — use freely in labs, courses, and production tooling.
 
 ---
 
-</details>
+## Contributing
 
-<details>
-<summary><strong>3) ios_xr_automation.py - main NETCONF workflow demonstration</strong></summary>
-
-### 3) `ios_xr_automation.py` - main NETCONF workflow demonstration
-
-### Primary purpose
-
-This is the core operational script. It demonstrates a complete NETCONF session lifecycle against IOS XR and gives practical gNMI command examples.
-
-### Conceptual architecture
-
-The script has two major functions:
-
-- `netconf_example()` -> performs NETCONF operations.
-- `print_gnmi_examples()` -> prints `gnmic` commands matching loaded config.
-
-The `__main__` block orchestrates both.
-
-### NETCONF flow in detail (`netconf_example()`)
-
-1. Load settings via `load_xr_config()`.
-2. Resolve DNS hostname to IPv4 via `socket.gethostbyname(...)`.
-3. Build NETCONF connection with `ncclient.manager.connect(...)`:
-   - host = resolved IP
-   - port = `netconf_port`
-   - username/password from config
-   - `hostkey_verify=False`
-   - `device_params={"name": "iosxr"}`
-4. Request running configuration:
-   - `session.get_config(source="running")`
-5. Print payload length (quick signal of successful retrieval).
-6. Iterate server capabilities and print selected model URIs.
-
-### Why capability printing is useful
-
-Capabilities reveal which YANG modules and revisions the server exposes. That helps you:
-
-- pick valid models for future automation,
-- confirm platform feature support,
-- compare behavior across IOS XR versions.
-
-### gNMI helper flow (`print_gnmi_examples()`)
-
-1. Reload same config values.
-2. Print command templates using current host/port/user.
-3. Keep password masked in output to avoid accidental exposure in terminal logs.
-
-### Inputs
-
-- `.env` configuration
-- reachable IOS XR endpoint
-
-### Output
-
-- Console output with NETCONF status, payload size, capabilities, and `gnmic` examples.
-
-### What to extend next
-
-- Save NETCONF XML output to a timestamped file.
-- Add XML parsing for specific fields (hostname, interface count).
-- Add command-line flags for host override and capability count.
-
----
-
-</details>
-
-<details>
-<summary><strong>4) ios_xr_interface_automation.py - focused OpenConfig interface query</strong></summary>
-
-### 4) `ios_xr_interface_automation.py` - focused OpenConfig interface query
-
-### Primary purpose
-
-This script narrows scope from "entire running config" to "single interface data" using an XML filter. It is designed for targeted, faster, and more relevant queries.
-
-### Why filtered queries are important
-
-In real environments, full configuration pulls are large and noisy. Filtered queries:
-
-- reduce payload size,
-- speed up troubleshooting,
-- support feature-specific automation pipelines.
-
-### Step-by-step internal flow
-
-1. Function `get_interface_info(interface_name="Loopback0")` is called.
-2. Load config and resolve hostname.
-3. Open NETCONF session via `manager.connect(...)`.
-4. Construct XML filter string using OpenConfig namespace:
-   - `http://openconfig.net/yang/interfaces`
-5. Inject requested interface name into filter.
-6. Execute `session.get(filter_xml)`.
-7. Return raw NETCONF response as string.
-8. In script mode (`__main__`), call with `Loopback0`, print completion + response size.
-
-### Inputs
-
-- interface name (function parameter)
-- `.env` connection values
-
-### Output
-
-- raw XML response string
-- console status in direct script execution
-
-### Design notes
-
-- Current implementation uses direct string formatting in XML. This is fine for lab usage, but for production hardening you may sanitize/validate interface names.
-
-### Extension ideas
-
-- Add CLI argument parsing (`argparse`) for interface name.
-- Parse response into structured JSON-like dict.
-- Add fallback behavior when interface is absent.
-
----
-
-</details>
-
-<details>
-<summary><strong>5) ios_xr_automation_env.py - compatibility and migration bridge</strong></summary>
-
-### 5) `ios_xr_automation_env.py` - compatibility and migration bridge
-
-### Primary purpose
-
-This file provides a stable, backward-compatible entrypoint for users/scripts that still call the older filename.
-
-### Why it exists
-
-Renaming files in active projects can break:
-
-- shell aliases,
-- automation pipelines,
-- documentation snippets,
-- student notes/lab guides.
-
-A compatibility wrapper reduces migration friction.
-
-### Step-by-step internal flow
-
-1. Import `netconf_example` and `print_gnmi_examples` from `ios_xr_automation.py`.
-2. Define `main()` to print a mode-specific header.
-3. Call imported functions in same order.
-4. Catch and print exceptions identically.
-
-### Inputs/outputs
-
-- Same as `ios_xr_automation.py`.
-
-### Practical guidance
-
-- Keep this file while users transition.
-- Deprecate later once all references are updated.
-
-</details>
-
----
-
-## How all Python files work together (system view)
-
-Think in layers:
-
-1. **Configuration layer**: `config.py`
-2. **Validation/preflight layer**: `simple_xr_automation.py`
-3. **Operational NETCONF layer**: `ios_xr_automation.py`
-4. **Targeted query layer**: `ios_xr_interface_automation.py`
-5. **Compatibility layer**: `ios_xr_automation_env.py`
-
-Data path:
-
-- `.env` -> `config.py` -> shared dict -> network scripts -> console output
-
----
-
-## Suggested learning path (for CCNA/CCNP automation learners)
-
-1. Read `config.py` first to understand environment loading and validation.
-2. Run and inspect `simple_xr_automation.py` output.
-3. Read `ios_xr_automation.py` and map each print line to an action.
-4. Study the interface filter in `ios_xr_interface_automation.py`.
-5. Modify one variable at a time (hostname, interface name, encoding) and observe behavior.
-
----
-
-## Glossary (quick definitions)
-
-- **NETCONF**: Network management protocol using XML over SSH.
-- **gNMI**: gRPC Network Management Interface for telemetry/config operations.
-- **YANG model**: Data model describing network configuration/state structure.
-- **Capability URI**: Server-advertised model/version support string.
-- **OpenConfig**: Vendor-neutral YANG model set.
-- **Preflight check**: Early validation step before expensive operations.
+This is a learning repository. Found a bug? Open an issue. Want to add a level? PRs welcome — follow the numbered naming convention (`level##_descriptive_name.py`).

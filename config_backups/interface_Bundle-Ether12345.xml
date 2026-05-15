@@ -1,0 +1,21 @@
+<interface-configuration xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-ifmgr-cfg" xmlns:nc="urn:ietf:params:xml:ns:netconf:base:1.0">
+    <active>act</active>
+    <interface-name>Bundle-Ether12345</interface-name>
+    <interface-virtual/>
+    <description>CUST-PORT: customer_1 - order_id_1 - service_id_1 - 100G - site_1</description>
+    <mtus>
+     <mtu>
+      <owner>etherbundle</owner>
+      <mtu>9216</mtu>
+     </mtu>
+    </mtus>
+    <bundle xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-bundlemgr-cfg">
+     <minimum-active>
+      <links>1</links>
+     </minimum-active>
+    </bundle>
+    <statistics xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-infra-statsd-cfg">
+     <load-interval>30</load-interval>
+    </statistics>
+   </interface-configuration>
+   
